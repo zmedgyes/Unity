@@ -181,6 +181,20 @@ public class ProtocolClient : MonoBehaviour {
         
     }
 
+    //nyers sensoradatok
+    public void rawSensorData(Vector3 center, Vector3 dir, float angle, float radius, HashSet<Vector3> hitPoints)
+    {
+        print(dir);
+        //TODO
+        QuadTree grid = new QuadTree();
+
+
+        foreach (Vector3 point in hitPoints)
+        {
+            grid.insertUnwalkable(point);
+        }
+    }
+
     //!! új útvonal elkészülése esetén hívott fgv
     public void OnPathFound(List<Node> newPath, bool pathSuccessful)
     {

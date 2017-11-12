@@ -129,5 +129,70 @@ public class QuadTree : MonoBehaviour {
         return ret;
     }
 
+    void tryRevert(QuadTreeNode node)
+    {
+        if (node != null)
+        {
+            bool flag = true;
+            foreach(QuadTreeNode n in node.parent.children)
+            {
+                if (!n.Equals(node))
+                {
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag)
+            {
+                node.parent.revertLeafs();
+                tryRevert(node.parent);
+            }
+        }
+    }
+
+    public void insertUnwalkable(Vector3 pos)
+    {
+        QuadTreeNode node = insertNewPoint(pos);
+        node.walkable = false;
+        tryRevert(node);
+    }
+
+    public void insertSeen(Vector3 pos)
+    {
+        QuadTreeNode node = insertNewPoint(pos);
+        node.seen = true;
+        tryRevert(node);
+    }
+
+    public HashSet<QuadTreeNode> findNodesInCone(Vector3 center, Vector3 direction, float angle, float radius)
+    {
+        HashSet<QuadTreeNode> ret = new HashSet<QuadTreeNode>();
+        HashSet<QuadTreeNode> coreNodesInRange = getCoreNodesInRadius(center, radius);
+        HashSet<QuadTreeNode> tmp;
+        foreach (QuadTreeNode n in coreNodesInRange)
+        {
+            tmp = n.recursiveNodesInCone(center, direction, angle, radius);
+            foreach (QuadTreeNode node in tmp)
+            {
+                ret.Add(node);
+            }
+        }
+
+        return ret;
+    }
+
+    HashSet<QuadTreeNode> getCoreNodesInRadius(Vector3 center, float radius)
+    {
+        HashSet<QuadTreeNode> ret = new HashSet<QuadTreeNode>();
+        foreach(QuadTreeNode n in coreNodeSet)
+        {
+            if (Vector3.Distance(center, n.worldPosition) <= (radius + startCellRadius))
+            {
+                ret.Add(n);
+            }
+        }
+        return ret;
+    }
+
 
 }

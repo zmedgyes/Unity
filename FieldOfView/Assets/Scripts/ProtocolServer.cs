@@ -14,16 +14,24 @@ public class ProtocolServer : MonoBehaviour {
     public float targetRepelRadius = 1;
     public bool selfAwareness = true;
 
+
+
     List<Node> available = new List<Node>();
     bool finished = false;
+    HD.TCPChat tcpServer;
+    int cnt = 0;
 
     // Use this for initialization
     void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
+
+    }
+    private void Awake()
+    {
+        tcpServer = GetComponent<HD.TCPChat>();
+    }
+
+    // Update is called once per frame
+    void Update () {
         //ha egyik kliensnek sincs targetje, akkor nincs több target
         bool targetsAvailable = false;
 	    foreach(ProtocolClient client in clients){
@@ -43,6 +51,14 @@ public class ProtocolServer : MonoBehaviour {
                     client.turnOff();
                 }
             }
+        }
+        if (tcpServer) {
+            if (cnt > 10)
+            {
+                tcpServer.Send("testmessage");
+                cnt = 0;
+            }
+            cnt++;
         }
 	}
 

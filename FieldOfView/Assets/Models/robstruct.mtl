@@ -1,0 +1,24 @@
+﻿
+newmtl Material~0
+Kd 0.7 0.7 0.7 
+Ka 0 0 0 
+Ks 0 0 0 
+d 1
+
+newmtl 202,209,238
+Kd 0.180392 0.364706 1 
+Ka 0 0 0 
+Ks 0.204264 0.38321 1 
+d 1
+
+newmtl Blck Paint
+Kd 0 0 0.0235294 
+Ka 0 0 0 
+Ks 0 0 0.0235294 
+d 0.85
+
+newmtl Clear window
+Kd 0.5 0.5 0.5 
+Ka 0.25 0.25 0.25 
+Ks 1 1 1 
+d 0.74

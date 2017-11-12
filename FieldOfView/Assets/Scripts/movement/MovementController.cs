@@ -47,6 +47,7 @@ public class MovementController : MonoBehaviour {
             {
                 transform.position = Vector3.MoveTowards(transform.position, target + height, movementSpeed * Time.deltaTime);
             }
+          
         }
 	}
 

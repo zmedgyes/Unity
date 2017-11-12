@@ -12,6 +12,7 @@ public class QuadTreeNode : IHeapItem<QuadTreeNode>
     public float radius;
 
     public bool walkable = true;
+    public bool seen = false;
     HashSet<QuadTreeNode> blockedBy;
 
     public QuadTreeNode parent;
@@ -352,5 +353,43 @@ public class QuadTreeNode : IHeapItem<QuadTreeNode>
             return true;
         }
         return false;
+    }
+
+    public bool Equals(QuadTreeNode otherNode)
+    {     
+        if (parent == otherNode.parent && 
+            iterationCount== otherNode.iterationCount &&
+            walkable==otherNode.walkable &&
+            seen == otherNode.seen &&
+            isLeaf==otherNode.isLeaf &&
+            blockedBy.SetEquals(otherNode.blockedBy)) { return true; }
+        return false;
+    }
+
+    public HashSet<QuadTreeNode> recursiveNodesInCone(Vector3 center, Vector3 dir, float angle, float radius)
+    {
+        HashSet<QuadTreeNode> ret = new HashSet<QuadTreeNode>();
+
+        if (isLeaf) {
+            if (Mathf.Abs(Vector3.Angle((worldPosition - center), (dir))) < angle / 2
+                    && Vector3.Distance(worldPosition, center) < radius)
+            {
+                ret.Add(this);
+            }
+        }
+
+        else
+        {
+            HashSet<QuadTreeNode> tmp;
+            foreach (QuadTreeNode n in children)
+            {
+                tmp = recursiveNodesInCone(center, dir, angle, radius);
+                foreach(QuadTreeNode node in tmp)
+                {
+                    ret.Add(node);
+                }
+            }
+        }
+        return ret;
     }
 }
