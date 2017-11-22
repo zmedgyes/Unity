@@ -18,16 +18,10 @@ public class ProtocolServer : MonoBehaviour {
 
     List<Node> available = new List<Node>();
     bool finished = false;
-    HD.TCPChat tcpServer;
-    int cnt = 0;
 
     // Use this for initialization
     void Start () {
 
-    }
-    private void Awake()
-    {
-        tcpServer = GetComponent<HD.TCPChat>();
     }
 
     // Update is called once per frame
@@ -51,14 +45,6 @@ public class ProtocolServer : MonoBehaviour {
                     client.turnOff();
                 }
             }
-        }
-        if (tcpServer) {
-            if (cnt > 10)
-            {
-                tcpServer.Send("testmessage");
-                cnt = 0;
-            }
-            cnt++;
         }
 	}
 

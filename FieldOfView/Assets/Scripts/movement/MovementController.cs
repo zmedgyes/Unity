@@ -8,10 +8,15 @@ public class MovementController : MonoBehaviour {
     public int maxRotationSpeed;
     public int rotationDirectionDifference;
     public int movementSpeed;
+    public float lastRotAngle;
+    public float lastMovementSpeed;
+
 
     Vector3 target;
     Rigidbody rb;
     Vector3 height;
+
+    public bool controllEnabled = true;
 
     // Use this for initialization
     void Start () {
@@ -22,12 +27,13 @@ public class MovementController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void LateUpdate () {
-        if (!targetReached()){
+        if (!targetReached() && controllEnabled)
+        {
             Vector3 targetDirection = target + height - transform.position;
 
             float angle = Vector3.Angle(transform.forward, targetDirection);
 
-            bool posDir = (Vector3.Angle(transform.right,targetDirection) > 90);
+            bool posDir = (Vector3.Angle(transform.right, targetDirection) > 90);
             int rot = Mathf.RoundToInt(angle / rotationUnit);
 
             if (rot > maxRotationSpeed)
@@ -37,17 +43,24 @@ public class MovementController : MonoBehaviour {
             Quaternion deltaRotation;
             if (posDir)
             {
-                deltaRotation = Quaternion.Euler(0.0f, -(rot * rotationUnit), 0.0f);
+                lastRotAngle = -(rot * rotationUnit);
+                deltaRotation = Quaternion.Euler(0.0f, lastRotAngle, 0.0f);
             }
-            else {
-                deltaRotation = Quaternion.Euler(0.0f, (rot * rotationUnit), 0.0f);
+            else
+            {
+                lastRotAngle = (rot * rotationUnit);
+                deltaRotation = Quaternion.Euler(0.0f, lastRotAngle, 0.0f);
             }
             rb.MoveRotation(rb.rotation * deltaRotation);
             if (Mathf.Abs(angle) < rotationDirectionDifference)
             {
+                lastMovementSpeed = movementSpeed;
                 transform.position = Vector3.MoveTowards(transform.position, target + height, movementSpeed * Time.deltaTime);
             }
-          
+
+        }
+        else {
+            lastMovementSpeed = 0;
         }
 	}
 

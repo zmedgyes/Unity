@@ -29,6 +29,8 @@ public class Sensor : MonoBehaviour
     List<Node> unwalkable= new List<Node>();
     List<Node> walkable = new List<Node>();
 
+    public bool uploadEnabled;
+
     // Use this for initialization
     void Start()
     {
@@ -37,6 +39,9 @@ public class Sensor : MonoBehaviour
         viewMeshFilter.mesh = viewMesh;
         //hitMask = obstacleMask;
         hitMask = obstacleMask | targetMask;
+        if (uploadEnabled) {
+            client.uploadSensorMeta(viewRadius, viewAngle, Mathf.RoundToInt(viewAngle * meshResolution));
+        }
     }
 
     // Update is called once per frame
@@ -81,14 +86,16 @@ public class Sensor : MonoBehaviour
         int stepCount = Mathf.RoundToInt(viewAngle * meshResolution);
         float stepAngleSize = viewAngle / stepCount;
         List<Vector3> viewPoints = new List<Vector3>();
+        List<float> hitDistances = new List<float>();
         ViewCastInfo oldViewCast = new ViewCastInfo();
         for (int i = 0; i <= stepCount; i++)
         {
             float angle = transform.eulerAngles.y - viewAngle / 2 + stepAngleSize * i;
             ViewCastInfo newViewCast = ViewCast(angle);
-
+            
             if (i > 0)
             {
+                hitDistances.Add(newViewCast.dst);
                 bool edgeDstThresholdExceeded = Mathf.Abs(oldViewCast.dst - newViewCast.dst) > edgeDstThreshold;
                 if (oldViewCast.hit != newViewCast.hit || (oldViewCast.hit && newViewCast.hit && edgeDstThresholdExceeded))
                 {
@@ -133,7 +140,10 @@ public class Sensor : MonoBehaviour
         viewMesh.RecalculateNormals();
 
         viewMesh.RecalculateBounds();
-
+        if (uploadEnabled)
+        {
+            client.uploadSensorData(hitDistances);
+        }
 
 
     }

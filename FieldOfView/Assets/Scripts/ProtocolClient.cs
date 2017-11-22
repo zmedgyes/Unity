@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class ProtocolClient : MonoBehaviour {
 
@@ -13,7 +14,14 @@ public class ProtocolClient : MonoBehaviour {
     Node lastTarget;
     int currentWaypoint;
     Grid grid;
+
     MovementController controller;
+    ManualController manualController;
+
+    public bool autoControlMode = true;
+
+    HD.TCPChat tcpServer;
+    int cnt = 0;
 
     public List<Node> lastWalkable = new List<Node>();
     public List<Node> lastUnwalkable = new List<Node>();
@@ -34,15 +42,36 @@ public class ProtocolClient : MonoBehaviour {
     // Use this for initialization
     void Start () {
         controller = GetComponent<MovementController>();
+        manualController = GetComponent<ManualController>();
         lastTarget = target;
         //self = transform;
         server.clients.Add(this);
         grid = server.grid;
-
-	}
+        tcpServer = GetComponent<HD.TCPChat>();
+    }
 
     // Update is called once per frame
     void Update() {
+        controller.controllEnabled = autoControlMode;
+        manualController.controllEnabled = !autoControlMode;
+        if (autoControlMode)
+        {
+            uploadControllInfo(controller.lastMovementSpeed, controller.lastRotAngle);
+        }
+        else
+        {
+            uploadControllInfo(manualController.lastMovementSpeed, manualController.lastRotAngle);
+        }
+
+        if (tcpServer)
+        {
+            if (cnt > 10)
+            {
+                tcpServer.Send("testmessage");
+                cnt = 0;
+            }
+            cnt++;
+        }
 
         if (run)
         {
@@ -80,7 +109,6 @@ public class ProtocolClient : MonoBehaviour {
                         }
                         //ha jó a jelenlegi út
                         else {
-
                             controller.moveTo(path[currentWaypoint].worldPosition);
 
                             //ha elértük az aktuális waypointot
@@ -184,7 +212,6 @@ public class ProtocolClient : MonoBehaviour {
     //nyers sensoradatok
     public void rawSensorData(Vector3 center, Vector3 dir, float angle, float radius, HashSet<Vector3> hitPoints)
     {
-        print(dir);
         //TODO
         QuadTree grid = new QuadTree();
 
@@ -192,6 +219,96 @@ public class ProtocolClient : MonoBehaviour {
         foreach (Vector3 point in hitPoints)
         {
             grid.insertUnwalkable(point);
+        }
+    }
+
+    private byte[] packetMessge(byte[] buffer) {
+        byte[] len = BitConverter.GetBytes(buffer.Length + 4);
+        Array.Reverse(len);
+
+        byte[] rv = new byte[len.Length + buffer.Length];
+        System.Buffer.BlockCopy(len, 0, rv, 0, len.Length);
+        System.Buffer.BlockCopy(buffer, 0, rv, len.Length, buffer.Length);
+        return rv;
+    }
+    
+    public void uploadSensorMeta(float distance, float angle, int step)
+    {
+        byte[] msgType = { 1 };
+        byte[] dst = BitConverter.GetBytes(distance);
+        Array.Reverse(dst);
+        byte[] ang = BitConverter.GetBytes(angle);
+        Array.Reverse(ang);
+        byte[] stp = BitConverter.GetBytes(step);
+        Array.Reverse(stp);
+
+        byte[] rv = new byte[dst.Length + ang.Length + stp.Length +msgType.Length];
+        System.Buffer.BlockCopy(msgType, 0, rv, 0, msgType.Length);
+        System.Buffer.BlockCopy(dst, 0, rv, msgType.Length, dst.Length);
+        System.Buffer.BlockCopy(ang, 0, rv, dst.Length + msgType.Length, ang.Length);
+        System.Buffer.BlockCopy(stp, 0, rv, ang.Length + dst.Length + msgType.Length, stp.Length);
+
+        if (tcpServer) {
+            byte[] msg = packetMessge(rv);
+            print("DIST: " + distance);
+            print("ANGLE: " + angle);
+            print("STEP: " + step);
+        }
+        
+    }
+    public void uploadSensorData(List<float> hitDistances)
+    {
+        byte[] msgType = { 2 };
+        byte[] len = BitConverter.GetBytes(hitDistances.Count);
+        byte[] items = new byte[hitDistances.Count * sizeof(float)];
+        for (var i = 0; i < hitDistances.Count; i++) {
+            byte[] tmp = BitConverter.GetBytes(hitDistances[i]);
+            Array.Reverse(tmp);
+            System.Buffer.BlockCopy(tmp, 0, items, i*sizeof(float), msgType.Length);
+        }
+        byte[] rv = new byte[len.Length + items.Length + msgType.Length];
+        System.Buffer.BlockCopy(msgType, 0, rv, 0, msgType.Length);
+        System.Buffer.BlockCopy(len, 0, rv, msgType.Length, len.Length);
+        System.Buffer.BlockCopy(items, 0, rv, len.Length + msgType.Length, items.Length);
+        if (tcpServer)
+        {
+            byte[] msg = packetMessge(rv);
+            print("COUNT: " + hitDistances.Count);
+        }
+
+    }
+    public void uploadControllInfo(float speed, float angle) {
+        byte[] msgType = { 3 };
+        byte[] spd = BitConverter.GetBytes(speed);
+        Array.Reverse(spd);
+        byte[] ang = BitConverter.GetBytes(angle);
+        Array.Reverse(ang);
+        byte[] rv = new byte[spd.Length + ang.Length + msgType.Length];
+        System.Buffer.BlockCopy(msgType, 0, rv, 0, msgType.Length);
+        System.Buffer.BlockCopy(spd, 0, rv, msgType.Length, spd.Length);
+        System.Buffer.BlockCopy(ang, 0, rv, spd.Length + msgType.Length, ang.Length);
+
+        if (tcpServer)
+        {
+            byte[] msg = packetMessge(rv);
+            print("SPEED: " + speed);
+            print("ANGLE: " + angle);
+        }
+    }
+    public void uploadStringLog(string log) {
+        byte[] msgType = { 4 };
+        byte[] buffer = System.Text.Encoding.BigEndianUnicode.GetBytes(log);
+        byte[] len = BitConverter.GetBytes(buffer.Length);
+        Array.Reverse(len);
+        byte[] rv = new byte[len.Length + buffer.Length+msgType.Length];
+        System.Buffer.BlockCopy(msgType, 0, rv, 0, msgType.Length);
+        System.Buffer.BlockCopy(len, 0, rv, msgType.Length, len.Length);
+        System.Buffer.BlockCopy(buffer, 0, rv, len.Length+msgType.Length, buffer.Length);
+
+        if (tcpServer)
+        {
+            byte[] msg = packetMessge(rv);
+            print("LOG: " + log);
         }
     }
 
@@ -218,6 +335,7 @@ public class ProtocolClient : MonoBehaviour {
             {
                 targetIndicator.position = target.worldPosition;
             }
+            uploadStringLog("new Target");
         }
     }
 

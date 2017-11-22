@@ -41,7 +41,7 @@ namespace HD
         /// </summary>
     public IPAddress serverIp;
     public int port = 5000;
-
+    public string address = "192.168.0.227";
     /// <summary>
     /// For Clients, there is only one and it's the connection to the server.
     /// For Servers, there are many - one per connected client.
@@ -69,7 +69,8 @@ namespace HD
       if(serverIp == null)
       { // Server: start listening for connections
         this.isServer = true;
-        listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
+        listener = new TcpListener(IPAddress.Parse(address), port);
+        //listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
         //listener = new TcpListener(localaddr: IPAddress.Any, port: port);
         listener.Start();
         listener.BeginAcceptTcpClient(OnServerConnect, null);
