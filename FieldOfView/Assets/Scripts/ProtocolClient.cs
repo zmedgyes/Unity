@@ -16,7 +16,7 @@ public class ProtocolClient : MonoBehaviour {
     Grid grid;
 
     MovementController controller;
-    ManualController manualController;
+    ExternalController manualController;
 
     public bool autoControlMode = true;
 
@@ -42,7 +42,7 @@ public class ProtocolClient : MonoBehaviour {
     // Use this for initialization
     void Start () {
         controller = GetComponent<MovementController>();
-        manualController = GetComponent<ManualController>();
+        manualController = GetComponent<ExternalController>();
         lastTarget = target;
         //self = transform;
         server.clients.Add(this);
@@ -62,13 +62,13 @@ public class ProtocolClient : MonoBehaviour {
         {
             uploadControllInfo(manualController.lastMovementSpeed, manualController.lastRotAngle);
         }
-
+        //TEST
         if (tcpServer)
         {
             if (cnt > 10)
             {
-                tcpServer.Send("testmessage");
-                cnt = 0;
+               uploadStringLog("testmessage");
+               cnt = 0;
             }
             cnt++;
         }
@@ -250,9 +250,10 @@ public class ProtocolClient : MonoBehaviour {
 
         if (tcpServer) {
             byte[] msg = packetMessge(rv);
-            print("DIST: " + distance);
-            print("ANGLE: " + angle);
-            print("STEP: " + step);
+            tcpServer.Send(msg);
+            //print("DIST: " + distance);
+            //print("ANGLE: " + angle);
+            //print("STEP: " + step);
         }
         
     }
@@ -273,7 +274,9 @@ public class ProtocolClient : MonoBehaviour {
         if (tcpServer)
         {
             byte[] msg = packetMessge(rv);
-            print("COUNT: " + hitDistances.Count);
+            tcpServer.Send(msg);
+
+            //print("COUNT: " + hitDistances.Count);
         }
 
     }
@@ -291,8 +294,9 @@ public class ProtocolClient : MonoBehaviour {
         if (tcpServer)
         {
             byte[] msg = packetMessge(rv);
-            print("SPEED: " + speed);
-            print("ANGLE: " + angle);
+            tcpServer.Send(msg);
+            //print("SPEED: " + speed);
+            //print("ANGLE: " + angle);
         }
     }
     public void uploadStringLog(string log) {
@@ -308,8 +312,28 @@ public class ProtocolClient : MonoBehaviour {
         if (tcpServer)
         {
             byte[] msg = packetMessge(rv);
-            print("LOG: " + log);
+            tcpServer.Send(msg);
+            //print("LOG: " + log);
         }
+    }
+
+    public void onHandleMessage(byte[] msg)
+    {
+        int type = BitConverter.ToInt32(msg, 0);
+        int data = BitConverter.ToInt32(msg, 4);
+        if(type == 1)
+        {
+            autoControlMode = (data != 0);
+        }
+        if (type == 2)
+        {
+            manualController.setVertical(data);
+        }
+        if (type == 3)
+        {
+            manualController.setHorizontal(data);
+        }
+        print("RECV: "+msg.Length);
     }
 
     //!! új útvonal elkészülése esetén hívott fgv

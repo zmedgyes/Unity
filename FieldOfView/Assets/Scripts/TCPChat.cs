@@ -47,18 +47,19 @@ namespace HD
     /// For Servers, there are many - one per connected client.
     /// </summary>
     List<TcpConnectedClient> clientList = new List<TcpConnectedClient>();
-
+    Queue<byte[]> messageQueue = new Queue<byte[]>();
     /// <summary>
     /// The string to render in Unity.
     /// </summary>
-    public static string messageToDisplay;
+        public static string messageToDisplay;
     public Text text;
   
-
+    
     /// <summary>
     /// Accepts new connections.  Null for clients.
     /// </summary>
     TcpListener listener;
+    ProtocolClient protocolClient;
     #endregion
 
     #region Unity Events
@@ -83,8 +84,12 @@ namespace HD
         client.BeginConnect(serverIp, port, (ar) => connectedClient.EndConnect(ar), null);
       }
     }
+        void Start()
+        {
+            protocolClient = GetComponent<ProtocolClient>();
+        }
 
-    protected void OnApplicationQuit()
+            protected void OnApplicationQuit()
     {
             if (listener != null) {
                 listener.Stop();
@@ -98,6 +103,13 @@ namespace HD
 
     protected void Update()
     {
+            print(messageQueue.Count);
+            if (clientList.Count > 0) {
+                while(messageQueue.Count > 0)
+                {
+                    Send(messageQueue.Dequeue());
+                }
+            }
             if (messageToDisplay != null)
             {
                 //text.text = messageToDisplay;
@@ -122,26 +134,48 @@ namespace HD
             print("client disconnect");
       clientList.Remove(client);
     }
-
-    internal void Send(
-      string message)
-    {
-      BroadcastChatMessage(message);
-
-      if(isServer)
-      {
-        messageToDisplay += message + Environment.NewLine;
-      }
+    public void OnRead(TcpConnectedClient client, byte[] data){
+            protocolClient.onHandleMessage(data);
     }
+        internal void Send(string message)
+        {
+          BroadcastChatMessage(message);
 
-    internal static void BroadcastChatMessage(string message)
-    {
-      for(int i = 0; i < instance.clientList.Count; i++)
-      {
-        TcpConnectedClient client = instance.clientList[i];
-        client.Send(message);
-      }
+          if(isServer)
+          {
+            messageToDisplay += message + Environment.NewLine;
+          }
+        }
+        internal void Send(byte [] message)
+        {
+            BroadcastChatMessage(message);
+
+            if (isServer)
+            {
+                messageToDisplay += message + Environment.NewLine;
+            }
+        }
+
+        internal static void BroadcastChatMessage(string message)
+        {
+          for(int i = 0; i < instance.clientList.Count; i++)
+          {
+            TcpConnectedClient client = instance.clientList[i];
+            client.Send(message);
+          }
+        }
+        internal static void BroadcastChatMessage(byte[] message)
+        {
+            if(instance.clientList.Count == 0)
+            {
+                instance.messageQueue.Enqueue(message);
+            }
+            for (int i = 0; i < instance.clientList.Count; i++)
+            {
+                TcpConnectedClient client = instance.clientList[i];
+                client.Send(message);
+            }
+        }
+        #endregion
     }
-    #endregion
-  }
 }

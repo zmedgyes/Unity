@@ -54,14 +54,17 @@ namespace HD
         TCPChat.instance.OnDisconnect(this);
         return;
       }
-
-      string newMessage = System.Text.Encoding.UTF8.GetString(readBuffer, 0, length);
-      TCPChat.messageToDisplay += newMessage + Environment.NewLine;
+      byte[] tmp = new byte[length];
+      System.Buffer.BlockCopy(readBuffer, 0, tmp, 0, length);
+      TCPChat.instance.OnRead(this,tmp);
+           
+      /*string newMessage = System.Text.Encoding.UTF8.GetString(readBuffer, 0, length);
+      /*TCPChat.messageToDisplay += newMessage + Environment.NewLine;
 
       if(TCPChat.instance.isServer)
       {
         TCPChat.BroadcastChatMessage(newMessage);
-      }
+      }*/
       
       stream.BeginRead(readBuffer, 0, readBuffer.Length, OnRead, null);
     }
@@ -103,6 +106,10 @@ namespace HD
             }
             stream.Write(rv, 0, rv.Length);
     }
-    #endregion
-  }
+    internal void Send(byte[] message)
+    {
+        stream.Write(message, 0, message.Length);
+    }
+        #endregion
+    }
 }

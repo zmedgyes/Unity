@@ -96,7 +96,7 @@ public class QuadTreeSensor : MonoBehaviour
         unwalkable.Clear();
         walkable.Clear();
 
-        client.rawSensorData(transform.position, transform.forward, viewAngle, viewRadius, hitpoints);
+        //client.rawSensorData(transform.position, transform.forward, viewAngle, viewRadius, hitpoints);
     }
 
 
