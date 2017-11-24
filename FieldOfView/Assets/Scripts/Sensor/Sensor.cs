@@ -30,6 +30,7 @@ public class Sensor : MonoBehaviour
     List<Node> walkable = new List<Node>();
 
     public bool uploadEnabled;
+    int cnt = 0;
 
     // Use this for initialization
     void Start()
@@ -40,7 +41,7 @@ public class Sensor : MonoBehaviour
         //hitMask = obstacleMask;
         hitMask = obstacleMask | targetMask;
         if (uploadEnabled) {
-            client.uploadSensorMeta(viewRadius, viewAngle, Mathf.RoundToInt(viewAngle * meshResolution));
+            client.uploadSensorMeta(viewAngle, Mathf.RoundToInt(viewAngle * meshResolution));
         }
     }
 
@@ -95,7 +96,7 @@ public class Sensor : MonoBehaviour
             
             if (i > 0)
             {
-                hitDistances.Add(newViewCast.dst);
+                hitDistances.Add((newViewCast.dst/viewRadius));
                 bool edgeDstThresholdExceeded = Mathf.Abs(oldViewCast.dst - newViewCast.dst) > edgeDstThreshold;
                 if (oldViewCast.hit != newViewCast.hit || (oldViewCast.hit && newViewCast.hit && edgeDstThresholdExceeded))
                 {
@@ -142,7 +143,12 @@ public class Sensor : MonoBehaviour
         viewMesh.RecalculateBounds();
         if (uploadEnabled)
         {
-            client.uploadSensorData(hitDistances);
+            if (cnt > 30)
+            {
+                client.uploadSensorData(hitDistances);
+                cnt = 0;
+            }
+            cnt++;
         }
 
 

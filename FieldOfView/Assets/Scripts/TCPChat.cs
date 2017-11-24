@@ -41,19 +41,20 @@ namespace HD
         /// </summary>
     public IPAddress serverIp;
     public int port = 5000;
-    public string address = "192.168.0.227";
-    /// <summary>
-    /// For Clients, there is only one and it's the connection to the server.
-    /// For Servers, there are many - one per connected client.
-    /// </summary>
-    List<TcpConnectedClient> clientList = new List<TcpConnectedClient>();
+    //public string address = "192.168.0.227";
+    public string address = "152.66.157.112";
+        /// <summary>
+        /// For Clients, there is only one and it's the connection to the server.
+        /// For Servers, there are many - one per connected client.
+        /// </summary>
+        List<TcpConnectedClient> clientList = new List<TcpConnectedClient>();
     Queue<byte[]> messageQueue = new Queue<byte[]>();
     /// <summary>
     /// The string to render in Unity.
     /// </summary>
         public static string messageToDisplay;
     public Text text;
-  
+        int cnt = 0;
     
     /// <summary>
     /// Accepts new connections.  Null for clients.
@@ -66,13 +67,17 @@ namespace HD
     public void Awake()
     {
       instance = this;
-      
-      if(serverIp == null)
+            serverIp = IPAddress.Parse(address);
+
+
+      if (serverIp == null)
       { // Server: start listening for connections
         this.isServer = true;
         listener = new TcpListener(IPAddress.Parse(address), port);
-        //listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
-        //listener = new TcpListener(localaddr: IPAddress.Any, port: port);
+                //listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
+        /*serverIp = IPAddress.Any;
+        address = serverIp.ToString();
+        listener = new TcpListener(serverIp,port);*/
         listener.Start();
         listener.BeginAcceptTcpClient(OnServerConnect, null);
       }
@@ -103,13 +108,16 @@ namespace HD
 
     protected void Update()
     {
-            print(messageQueue.Count);
+            //print("Q: "+messageQueue.Count);
             if (clientList.Count > 0) {
-                while(messageQueue.Count > 0)
+                if(messageQueue.Count > 0 && cnt > 9)
                 {
-                    Send(messageQueue.Dequeue());
+                    BroadcastChatMessage(messageQueue.Dequeue());
+                    cnt = 0;
                 }
             }
+            cnt++;
+
             if (messageToDisplay != null)
             {
                 //text.text = messageToDisplay;
@@ -148,8 +156,8 @@ namespace HD
         }
         internal void Send(byte [] message)
         {
-            BroadcastChatMessage(message);
-
+            //BroadcastChatMessage(message);
+            instance.messageQueue.Enqueue(message);
             if (isServer)
             {
                 messageToDisplay += message + Environment.NewLine;
@@ -166,10 +174,11 @@ namespace HD
         }
         internal static void BroadcastChatMessage(byte[] message)
         {
-            if(instance.clientList.Count == 0)
+            
+            /*if(instance.clientList.Count == 0)
             {
                 instance.messageQueue.Enqueue(message);
-            }
+            }*/
             for (int i = 0; i < instance.clientList.Count; i++)
             {
                 TcpConnectedClient client = instance.clientList[i];

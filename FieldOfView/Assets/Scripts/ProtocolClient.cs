@@ -54,20 +54,20 @@ public class ProtocolClient : MonoBehaviour {
     void Update() {
         controller.controllEnabled = autoControlMode;
         manualController.controllEnabled = !autoControlMode;
-        if (autoControlMode)
-        {
-            uploadControllInfo(controller.lastMovementSpeed, controller.lastRotAngle);
-        }
-        else
-        {
-            uploadControllInfo(manualController.lastMovementSpeed, manualController.lastRotAngle);
-        }
         //TEST
         if (tcpServer)
         {
-            if (cnt > 10)
+            if (cnt > 20)
             {
-               uploadStringLog("testmessage");
+                if (autoControlMode)
+                {
+                    uploadControllInfo(controller.lastMovementSpeed, controller.lastRotAngle);
+                }
+                else
+                {
+                    uploadControllInfo(manualController.lastMovementSpeed, manualController.lastRotAngle);
+                }
+                //uploadStringLog("testmessage");
                cnt = 0;
             }
             cnt++;
@@ -223,7 +223,9 @@ public class ProtocolClient : MonoBehaviour {
     }
 
     private byte[] packetMessge(byte[] buffer) {
-        byte[] len = BitConverter.GetBytes(buffer.Length + 4);
+        int msgLength = buffer.Length + 4;
+        //print("LEN: " + msgLength);
+        byte[] len = BitConverter.GetBytes(msgLength);
         Array.Reverse(len);
 
         byte[] rv = new byte[len.Length + buffer.Length];
@@ -232,21 +234,19 @@ public class ProtocolClient : MonoBehaviour {
         return rv;
     }
     
-    public void uploadSensorMeta(float distance, float angle, int step)
+    public void uploadSensorMeta(float angle, int step)
     {
         byte[] msgType = { 1 };
-        byte[] dst = BitConverter.GetBytes(distance);
-        Array.Reverse(dst);
+
         byte[] ang = BitConverter.GetBytes(angle);
         Array.Reverse(ang);
         byte[] stp = BitConverter.GetBytes(step);
         Array.Reverse(stp);
 
-        byte[] rv = new byte[dst.Length + ang.Length + stp.Length +msgType.Length];
+        byte[] rv = new byte[ang.Length + stp.Length +msgType.Length];
         System.Buffer.BlockCopy(msgType, 0, rv, 0, msgType.Length);
-        System.Buffer.BlockCopy(dst, 0, rv, msgType.Length, dst.Length);
-        System.Buffer.BlockCopy(ang, 0, rv, dst.Length + msgType.Length, ang.Length);
-        System.Buffer.BlockCopy(stp, 0, rv, ang.Length + dst.Length + msgType.Length, stp.Length);
+        System.Buffer.BlockCopy(ang, 0, rv, msgType.Length, ang.Length);
+        System.Buffer.BlockCopy(stp, 0, rv, ang.Length + msgType.Length, stp.Length);
 
         if (tcpServer) {
             byte[] msg = packetMessge(rv);
@@ -261,6 +261,10 @@ public class ProtocolClient : MonoBehaviour {
     {
         byte[] msgType = { 2 };
         byte[] len = BitConverter.GetBytes(hitDistances.Count);
+        Array.Reverse(len);
+        /*for (int i = 0; i < len.Length; i++) {
+            print(len[i]);
+        }*/
         byte[] items = new byte[hitDistances.Count * sizeof(float)];
         for (var i = 0; i < hitDistances.Count; i++) {
             byte[] tmp = BitConverter.GetBytes(hitDistances[i]);
@@ -317,10 +321,12 @@ public class ProtocolClient : MonoBehaviour {
         }
     }
 
+
     public void onHandleMessage(byte[] msg)
     {
-        int type = BitConverter.ToInt32(msg, 0);
-        int data = BitConverter.ToInt32(msg, 4);
+        byte type = msg[0];
+        int data = BitConverter.ToInt32(msg, 1);
+        print("RECV:" + type + " " + data);
         if(type == 1)
         {
             autoControlMode = (data != 0);
@@ -333,7 +339,7 @@ public class ProtocolClient : MonoBehaviour {
         {
             manualController.setHorizontal(data);
         }
-        print("RECV: "+msg.Length);
+        //print("RECV: "+msg.Length);
     }
 
     //!! új útvonal elkészülése esetén hívott fgv
