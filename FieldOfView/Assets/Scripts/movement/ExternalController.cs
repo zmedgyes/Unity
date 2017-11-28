@@ -41,6 +41,7 @@ public class ExternalController : MonoBehaviour
     void FixedUpdate()
     {
         if (controllEnabled) {
+
             Quaternion deltaRotation;
             if (vertical >= 0)
             {

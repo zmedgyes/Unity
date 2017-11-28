@@ -269,7 +269,7 @@ public class ProtocolClient : MonoBehaviour {
         for (var i = 0; i < hitDistances.Count; i++) {
             byte[] tmp = BitConverter.GetBytes(hitDistances[i]);
             Array.Reverse(tmp);
-            System.Buffer.BlockCopy(tmp, 0, items, i*sizeof(float), msgType.Length);
+            System.Buffer.BlockCopy(tmp, 0, items, i*sizeof(float), tmp.Length);
         }
         byte[] rv = new byte[len.Length + items.Length + msgType.Length];
         System.Buffer.BlockCopy(msgType, 0, rv, 0, msgType.Length);
@@ -324,12 +324,13 @@ public class ProtocolClient : MonoBehaviour {
 
     public void onHandleMessage(byte[] msg)
     {
-        byte type = msg[0];
-        int data = BitConverter.ToInt32(msg, 1);
+        Array.Reverse(msg);
+        byte type = msg[4];
+        int data = BitConverter.ToInt32(msg, 0);
         print("RECV:" + type + " " + data);
         if(type == 1)
         {
-            autoControlMode = (data != 0);
+            autoControlMode = (data == 0);
         }
         if (type == 2)
         {

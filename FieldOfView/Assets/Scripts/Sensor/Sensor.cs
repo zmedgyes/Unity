@@ -96,7 +96,8 @@ public class Sensor : MonoBehaviour
             
             if (i > 0)
             {
-                hitDistances.Add((newViewCast.dst/viewRadius));
+                float tmpData = (newViewCast.dst / viewRadius);
+                hitDistances.Add(tmpData);
                 bool edgeDstThresholdExceeded = Mathf.Abs(oldViewCast.dst - newViewCast.dst) > edgeDstThreshold;
                 if (oldViewCast.hit != newViewCast.hit || (oldViewCast.hit && newViewCast.hit && edgeDstThresholdExceeded))
                 {
