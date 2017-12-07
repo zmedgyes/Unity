@@ -21,7 +21,10 @@ public class ProtocolServer : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-
+        foreach (ProtocolClient client in clients)
+        {
+            client.turnOn();
+        }
     }
 
     // Update is called once per frame

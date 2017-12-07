@@ -55,26 +55,27 @@ public class ProtocolClient : MonoBehaviour {
         controller.controllEnabled = autoControlMode;
         manualController.controllEnabled = !autoControlMode;
         //TEST
-        if (tcpServer)
-        {
-            if (cnt > 20)
-            {
-                if (autoControlMode)
-                {
-                    uploadControllInfo(controller.lastMovementSpeed, controller.lastRotAngle);
-                }
-                else
-                {
-                    uploadControllInfo(manualController.lastMovementSpeed, manualController.lastRotAngle);
-                }
-                //uploadStringLog("testmessage");
-               cnt = 0;
-            }
-            cnt++;
-        }
+
 
         if (run)
         {
+            if (tcpServer)
+            {
+                if (cnt > 20)
+                {
+                    if (autoControlMode)
+                    {
+                        uploadControllInfo(controller.lastMovementSpeed, controller.lastRotAngle);
+                    }
+                    else
+                    {
+                        uploadControllInfo(manualController.lastMovementSpeed, manualController.lastRotAngle);
+                    }
+                    //uploadStringLog("testmessage");
+                    cnt = 0;
+                }
+                cnt++;
+            }
             uploadSensorDataToServer();
 
             //ha nem( útra várás || targetre várás || nincs elérhető target)
@@ -366,7 +367,7 @@ public class ProtocolClient : MonoBehaviour {
             {
                 targetIndicator.position = target.worldPosition;
             }
-            uploadStringLog("new Target");
+            uploadStringLog("New Target: "+target.worldPosition.ToString());
         }
     }
 
@@ -403,11 +404,13 @@ public class ProtocolClient : MonoBehaviour {
 
     public void turnOff() {
         run = false;
+        uploadStringLog("Turn Off (manual only)");
     }
 
     public void turnOn()
     {
         run = true;
+        uploadStringLog("Turn On");
     }
 
     //5mp várá utána új target igénylése
