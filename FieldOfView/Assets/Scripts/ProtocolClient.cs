@@ -61,7 +61,7 @@ public class ProtocolClient : MonoBehaviour {
         {
             if (tcpServer)
             {
-                if (cnt > 20)
+                if (cnt > 0)
                 {
                     if (autoControlMode)
                     {
@@ -260,6 +260,7 @@ public class ProtocolClient : MonoBehaviour {
     }
     public void uploadSensorData(List<float> hitDistances)
     {
+        hitDistances.Reverse();
         byte[] msgType = { 2 };
         byte[] len = BitConverter.GetBytes(hitDistances.Count);
         Array.Reverse(len);

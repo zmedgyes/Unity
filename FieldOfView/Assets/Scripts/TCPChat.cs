@@ -110,7 +110,7 @@ namespace HD
     {
             //print("Q: "+messageQueue.Count);
             if (clientList.Count > 0) {
-                if(messageQueue.Count > 0 && cnt > 9)
+                while(messageQueue.Count > 0)
                 {
                     BroadcastChatMessage(messageQueue.Dequeue());
                     cnt = 0;

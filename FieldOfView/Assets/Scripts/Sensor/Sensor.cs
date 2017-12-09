@@ -144,7 +144,7 @@ public class Sensor : MonoBehaviour
         viewMesh.RecalculateBounds();
         if (uploadEnabled)
         {
-            if (cnt > 30)
+            if (cnt > 0)
             {
                 client.uploadSensorData(hitDistances);
                 cnt = 0;
